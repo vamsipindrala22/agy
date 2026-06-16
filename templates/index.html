@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Explorer</title>
+    <meta name="description" content="Browse, search, filter, and share Google BigQuery release notes in a modern, interactive dashboard.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome Icons for premium feel -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dark-mode">
+    <div class="app-container">
+        <!-- Background decorative blobs for premium gradient effect -->
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-main">
+                <div class="brand">
+                    <div class="logo-wrapper">
+                        <i class="fa-solid fa-database logo-icon"></i>
+                        <span class="logo-pulse"></span>
+                    </div>
+                    <div>
+                        <h1>BigQuery <span class="gradient-text">Release Notes</span></h1>
+                        <p class="subtitle">Stay updated with the latest Google BigQuery announcements</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn btn-primary">
+                        <i class="fa-solid fa-arrows-rotate spinner-icon" id="refresh-icon"></i>
+                        <span>Refresh Notes</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toolbar with Search and Meta Info -->
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search features, issues, SQL, Gemini..." autocomplete="off">
+                    <button id="clear-search" class="clear-btn" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="stats-badge">
+                    <span id="update-count">0</span> updates found
+                </div>
+            </div>
+            
+            <!-- Filter Pills -->
+            <div class="filter-section">
+                <div class="filter-pills" id="filter-pills">
+                    <button class="pill active" data-filter="all">All Updates</button>
+                    <button class="pill" data-filter="Feature"><i class="fa-solid fa-circle-plus"></i> Features</button>
+                    <button class="pill" data-filter="Issue"><i class="fa-solid fa-circle-exclamation"></i> Issues</button>
+                    <button class="pill" data-filter="Notice"><i class="fa-solid fa-circle-info"></i> Notices</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="content-container">
+            <!-- Skeleton Loader -->
+            <div id="skeleton-loader" class="skeleton-grid">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+
+            <!-- Release Notes List -->
+            <div id="notes-container" class="notes-grid" style="display: none;">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <i class="fa-regular fa-folder-open empty-icon"></i>
+                <h3>No release notes match your search</h3>
+                <p>Try refining your search queries or clearing filters.</p>
+                <button id="reset-filters" class="btn btn-secondary">Reset Search & Filters</button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 BigQuery Release Notes Explorer. All rights reserved. Data fetched live from Google Cloud Platform.</p>
+        </footer>
+    </div>
+
+    <!-- Twitter Composer Modal (X) -->
+    <div id="tweet-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-brands fa-x-twitter x-logo"></i>
+                    <h2>Compose Tweet</h2>
+                </div>
+                <button class="modal-close" id="close-modal-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Mock Tweet Container for visual premium touch -->
+                <div class="mock-tweet-card">
+                    <div class="tweet-user-info">
+                        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=256&auto=format&fit=crop" alt="Profile avatar" class="tweet-avatar">
+                        <div class="user-details">
+                            <span class="user-name">GCP Enthusiast</span>
+                            <span class="user-handle">@gcp_explorer</span>
+                        </div>
+                    </div>
+                    <div class="tweet-textarea-wrapper">
+                        <textarea id="tweet-textarea" rows="6" maxlength="280" placeholder="What's happening?"></textarea>
+                    </div>
+                </div>
+                <div class="tweet-meta">
+                    <span class="character-count-wrapper">
+                        <span id="char-count">0</span> / 280
+                    </span>
+                    <span id="char-warning" class="warning-text" style="display: none;">Approaching limit!</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-tweet-btn">Cancel</button>
+                <button class="btn btn-primary tweet-action-btn" id="post-tweet-btn">
+                    <i class="fa-brands fa-x-twitter"></i>
+                    <span>Share on X</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i id="toast-icon" class="fa-solid fa-circle-check"></i>
+        <span id="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
